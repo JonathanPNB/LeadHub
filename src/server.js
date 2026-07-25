@@ -24,7 +24,7 @@ app.get('/jetimob/contatos', async (req, res) => {
       });
     }
     
-    console.log("[server.js] dados: "+data);
+    console.log("[server.js] dados: "+JSON.stringify(data, null, 2));
     // Retorno de sucesso
     res.json({ sucesso: true, dados: data });
 
@@ -38,4 +38,4 @@ app.get('/jetimob/contatos', async (req, res) => {
   }
 });
 
-app.listen(process.env.APP_PORT, () => console.log('API rodando na porta '+process.env.APP_PORT));
+app.listen(process.env.PORT, () => console.log('API rodando na porta '+process.env.PORT));
