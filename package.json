@@ -1,0 +1,22 @@
+{
+  "name": "connector",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "engines": {
+    "node": "24" 
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --use-system-ca src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
