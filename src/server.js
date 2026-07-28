@@ -19,13 +19,16 @@ async function syncJetimobLeads() {
 
   //Inserir os registros na tabela "Contatos_JetiMob" (uma única requisição)
   const registros = [];
-  for (const lead of leads.dados) {
-    registros.push({ nome_contato: lead.nome_contato, num_telefone: lead.num_telefone + Math.floor(Math.random() * (9 - 0 + 1)) + 0 })
+  if (leads != null) {
+    for (const lead of leads.dados) {
+      registros.push({ nome_contato: lead.nome_contato, num_telefone: lead.num_telefone + Math.floor(Math.random() * (9 - 0 + 1)) + 0 })
+    }
+
+    if (registros.length > 0) {
+      cadastrarJetimobLeads(registros)
+    }
   }
 
-  if (registros.length > 0) {
-    cadastrarJetimobLeads(registros)
-  }
 }
 
 async function cadastrarJetimobLeads(registros) {
