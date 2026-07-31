@@ -7,11 +7,11 @@ export async function getJetimobLeads() {
 
     console.log(`[${dataHora()}] Iniciando requisicao para a url ${url}`)
     const response = await fetch(url, {
-      method: 'GET'/*,
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Authorization-Key': process.env.JETIMOB_PRIVATE_KEY
-      }*/
+      }
     });
 
     if (!response.ok) {

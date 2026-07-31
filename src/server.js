@@ -6,6 +6,7 @@ import { supabase } from "./database/supabase.js";
 import { getJetimobLeads } from "./jetimob/leads.js";
 import { dataHora } from "./util/util.js";
 import { getChatproContatos } from "./chatpro/contatos.js";
+import { getSupaBase_ContatosJetiMob } from "./database/contatos_jetimob.js";
 
 const app = express();
 app.use(express.json());
@@ -13,25 +14,36 @@ app.use(express.json());
 //Busca os contatos ja cadastrados no Jetimob e insere na tabela "Contatos_JetiMob"
 async function syncJetimobLeads() {
   console.log(`[${dataHora()}][server.js] Sincronizando leads do Jetimob...`);
-  const leads = await getJetimobLeads();
+  const leadsJetiMob = await getJetimobLeads();
+  const leads_contatosJetimob = await getSupaBase_ContatosJetiMob();
 
-  console.log(`[${dataHora()}][server.js] syncJetimobLeads: ${JSON.stringify(leads, null, 2)}`);
+  console.log(`[${dataHora()}][server.js] syncJetimobLeads: ${leadsJetiMob.total} leads retornados do JetiMob`);
+  console.log(`[${dataHora()}][server.js] syncJetimobLeads: ${leads_contatosJetimob.length} leads retornados do Supabase`);
 
-  //Inserir os registros na tabela "Contatos_JetiMob" (uma única requisição)
+  // Ordenação crescente comparando a primeira string de telefone como texto
+  leadsJetiMob.sort((a, b) => a.phones[0].localeCompare(b.phones[0]));
+
+  //filtra e insere apenas os telefones nao cadastrados ainda
   const registros = [];
-  if (leads != null) {
-    for (const lead of leads.dados) {
-      registros.push({ nome_contato: lead.nome_contato, num_telefone: lead.num_telefone + Math.floor(Math.random() * (9 - 0 + 1)) + 0 })
+  if (leadsJetiMob != null) {
+    for (const lead of leadsJetiMob.result) {
+      for (const telefone of lead.phones) {
+        if (leads_contatosJetimob.includes()) {
+          registros.push({ nome_contato: lead.full_name, num_telefone: telefone })
+        }
+      }
     }
 
+    //Inserir os registros na tabela "Contatos_JetiMob" (uma única requisição)
     if (registros.length > 0) {
-      cadastrarJetimobLeads(registros)
+      console.log(`[${dataHora()}][server.js] syncJetimobLeads: ${registros.length} leads enviados para tabela Contatos_JetiMob`);
+      cadastrarJetimobContatos(registros)
     }
   }
 
 }
 
-async function cadastrarJetimobLeads(registros) {
+async function cadastrarJetimobContatos(registros) {
   const { error } = await supabase
     .from("Contatos_JetiMob")
     .insert(registros);
@@ -97,25 +109,25 @@ app.get('/jetimob/leads', async (req, res) => {
 
     // Verifica se o Supabase retornou um erro de banco/regra
     if (error) {
-      console.error("[server.js] error.message: "+error.message);
-      console.error("[server.js] error.details: "+error.details);
-      return res.status(400).json({ 
-        sucesso: false, 
+      console.error("[server.js] error.message: " + error.message);
+      console.error("[server.js] error.details: " + error.details);
+      return res.status(400).json({
+        sucesso: false,
         error: error.message,
         details: error.details
       });
     }
-    
-    console.log("[server.js] dados: "+data);
+
+    console.log("[server.js] dados: " + data);
     // Retorno de sucesso
     res.json({ sucesso: true, dados: data });
 
   } catch (err) {
     // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
     console.error('Erro interno no servidor:', err);
-    res.status(500).json({ 
-      sucesso: false, 
-      erro: 'Erro interno no servidor ao buscar dados.' 
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro interno no servidor ao buscar dados.'
     });
   }
 });
@@ -126,7 +138,7 @@ app.listen(process.env.PORT, () => {
   //busca os leads do jetimob
   syncJetimobLeads();
   //busca os contatos do chatpro
-  syncChatProContatos();
+  // syncChatProContatos();
   //verifica quais contatos existem no chatpro porem ainda nao estao no jetimob
   // validContatos();
 
