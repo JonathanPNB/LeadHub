@@ -5,7 +5,7 @@ export async function getJetimobLeads() {
   try {
     const url = process.env.JETIMOB_URL_LEADS + process.env.JETIMOB_PUBLIC_KEY
 
-    console.log(`[${dataHora()}] Iniciando requisicao para a url ${url}`)
+    console.log(`[${dataHora()}] Iniciando requisicao para a url ${process.env.JETIMOB_URL_LEADS}`)
     const response = await fetch(url, {
       method: 'GET',
       headers: {

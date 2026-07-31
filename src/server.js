@@ -20,16 +20,20 @@ async function syncJetimobLeads() {
   console.log(`[${dataHora()}][server.js] syncJetimobLeads: ${leadsJetiMob.total} leads retornados do JetiMob`);
   console.log(`[${dataHora()}][server.js] syncJetimobLeads: ${leads_contatosJetimob.length} leads retornados do Supabase`);
 
+  const telefonesCadastrados = new Set(
+    (leads_contatosJetimob ?? []).map((contato) => contato.num_telefone)
+  );
+
   // Ordenação crescente comparando a primeira string de telefone como texto
-  leadsJetiMob.sort((a, b) => a.phones[0].localeCompare(b.phones[0]));
+  // leadsJetiMob.result.sort((a, b) => a.phones[0].localeCompare(b.phones[0]));
 
   //filtra e insere apenas os telefones nao cadastrados ainda
   const registros = [];
-  if (leadsJetiMob != null) {
+  if (leadsJetiMob?.result) {
     for (const lead of leadsJetiMob.result) {
       for (const telefone of lead.phones) {
-        if (leads_contatosJetimob.includes()) {
-          registros.push({ nome_contato: lead.full_name, num_telefone: telefone })
+        if (!telefonesCadastrados.has(telefone)) {
+          registros.push({ nome_contato: lead.full_name, num_telefone: telefone });
         }
       }
     }
@@ -38,6 +42,8 @@ async function syncJetimobLeads() {
     if (registros.length > 0) {
       console.log(`[${dataHora()}][server.js] syncJetimobLeads: ${registros.length} leads enviados para tabela Contatos_JetiMob`);
       cadastrarJetimobContatos(registros)
+    } else {
+      console.log(`[${dataHora()}][server.js] syncJetimobLeads: Não foram encontrados registros a serem enviados para tabela Contatos_JetiMob`);
     }
   }
 
