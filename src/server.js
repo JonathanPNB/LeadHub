@@ -64,7 +64,7 @@ async function cadastrarJetimobContatos(registros) {
 app.post("/chatpro/eventos", async (req, res) => {
   try {
     const tipo = req.body.type || req.body.Type;
-    if (tipo !== null && tipo !== undefined) {
+    if (!tipo.trim() === false) {
       const registros = [];
       let telefone = "";
       let mensagem = "";
@@ -72,6 +72,7 @@ app.post("/chatpro/eventos", async (req, res) => {
       switch (tipo) {
         case "send_text_message":
         case "received_message":
+        case "receveid_message":
         case "sent_message":
         case "send_message":
           console.log(`[server.js] ${tipo} recebido`);
@@ -83,25 +84,25 @@ app.post("/chatpro/eventos", async (req, res) => {
           break;
       }
 
-      //filtra e insere apenas os telefones nao cadastrados ainda
-      if (telefone !== null && telefone !== undefined && mensagem !== null && mensagem !== undefined) {
+      //verifica se a variavel possui um valor valido
+      if ((!telefone.trim() || !mensagem.trim()) === false) {
         registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem });
-      }
 
-      // Requisição ao Supabase
-      const { data, error } = await supabase
-        .from("Eventos_chatPro")
-        .insert(registros);
+        // Requisição ao Supabase
+        const { data, error } = await supabase
+          .from("Eventos_chatPro")
+          .insert(registros);
 
-      // // Verifica se o Supabase retornou um erro de banco/regra
-      if (error) {
-        console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
-        console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
-        return res.status(400).json({
-          sucesso: false,
-          error: error.message,
-          details: error.details
-        });
+        // // Verifica se o Supabase retornou um erro de banco/regra
+        if (error) {
+          console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
+          console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
+          return res.status(400).json({
+            sucesso: false,
+            error: error.message,
+            details: error.details
+          });
+        }
       }
 
       console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
