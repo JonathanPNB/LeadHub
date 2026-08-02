@@ -24,9 +24,6 @@ async function syncJetimobLeads() {
     (leads_contatosJetimob ?? []).map((contato) => contato.num_telefone)
   );
 
-  // Ordenação crescente comparando a primeira string de telefone como texto
-  // leadsJetiMob.result.sort((a, b) => a.phones[0].localeCompare(b.phones[0]));
-
   //filtra e insere apenas os telefones nao cadastrados ainda
   const registros = [];
   if (leadsJetiMob?.result) {
@@ -63,18 +60,11 @@ async function cadastrarJetimobContatos(registros) {
   console.log(`[${dataHora()}][server.js] ${registros.length} lead(s) inserido(s).`);
 }
 
-//Busca os contatos ja cadastrados no chatpro e insere na tabela "Contatos_chatPro"
-async function syncChatProContatos() {
-  console.log(`[${dataHora()}][server.js] Sincronizando contatos do chatPro...`);
-  const contatos = await getChatproContatos();
-
-  console.log(`[${dataHora()}][server.js] syncChatProContatos: ${JSON.stringify(contatos, null, 2)}`);
-  //cadastrar os contatos retornados na tabela 'Contatos_chatPro'
-}
-
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
+
+    console.error(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req, null, 2)}`);
     // Requisição ao Supabase
     const { data, error } = await supabase
       .from("Eventos_chatPro")
@@ -143,8 +133,6 @@ app.listen(process.env.PORT, () => {
 
   //busca os leads do jetimob
   syncJetimobLeads();
-  //busca os contatos do chatpro
-  // syncChatProContatos();
   //verifica quais contatos existem no chatpro porem ainda nao estao no jetimob
   // validContatos();
 
