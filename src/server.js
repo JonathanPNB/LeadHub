@@ -63,27 +63,51 @@ async function cadastrarJetimobContatos(registros) {
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
+    const tipo = req.body.type || req.body.Type;
+    if (tipo !== null && tipo !== undefined) {
+      const registros = [];
+      let telefone = "";
+      let mensagem = "";
 
-    console.error(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
-    // Requisição ao Supabase
-    // const { data, error } = await supabase
-    //   .from("Eventos_chatPro")
-    //   .insert(req);
+      switch (tipo) {
+        case "send_text_message":
+        case "received_message":
+        case "sent_message":
+        case "send_message":
+          console.log(`[server.js] ${tipo} recebido`);
+          telefone = req.body.Body.Info.RemoteJid.substring(1, req.body.Body.Info.RemoteJid.indexOf('@'));
+          mensagem = req.body.Body.Text;
+          break;
+        default:
+          console.log(`[server.js] ${tipo} recebido e não tratado`);
+          break;
+      }
 
-    // // Verifica se o Supabase retornou um erro de banco/regra
-    // if (error) {
-    //   console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
-    //   console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
-    //   return res.status(400).json({
-    //     sucesso: false,
-    //     error: error.message,
-    //     details: error.details
-    //   });
-    // }
+      //filtra e insere apenas os telefones nao cadastrados ainda
+      if (telefone !== null && telefone !== undefined && mensagem !== null && mensagem !== undefined) {
+        registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem });
+      }
 
-    // console.log(`[${dataHora()}][server.js] dados: ${JSON.stringify(data, null, 2)}`);
+      // Requisição ao Supabase
+      const { data, error } = await supabase
+        .from("Eventos_chatPro")
+        .insert(registros);
+
+      // // Verifica se o Supabase retornou um erro de banco/regra
+      if (error) {
+        console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
+        console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
+        return res.status(400).json({
+          sucesso: false,
+          error: error.message,
+          details: error.details
+        });
+      }
+
+      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
+    }
     // Retorno de sucesso
-    res.json({ sucesso: true, dados: 'data' });
+    res.json({ sucesso: true });
 
   } catch (err) {
     // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
@@ -132,8 +156,6 @@ app.listen(process.env.PORT, () => {
 
   //busca os leads do jetimob
   syncJetimobLeads();
-  //verifica quais contatos existem no chatpro porem ainda nao estao no jetimob
-  // validContatos();
 
   const cronSchedule = process.env.JETIMOB_CRON_SCHEDULE || "0 * * * *";
   cron.schedule(cronSchedule, syncJetimobLeads);
