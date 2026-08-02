@@ -64,7 +64,7 @@ async function cadastrarJetimobContatos(registros) {
 app.post("/chatpro/eventos", async (req, res) => {
   try {
 
-    console.error(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req, null, 2)}`);
+    console.error(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
     // Requisição ao Supabase
     // const { data, error } = await supabase
     //   .from("Eventos_chatPro")
