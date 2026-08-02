@@ -60,6 +60,38 @@ async function cadastrarJetimobContatos(registros) {
   console.log(`[${dataHora()}][server.js] ${registros.length} lead(s) inserido(s).`);
 }
 
+app.get('/leads', async (req, res) => {
+  try {
+    // Retorno de sucesso
+    res.json({ sucesso: true});
+
+  } catch (err) {
+    // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
+    console.error('Erro interno no servidor:', err);
+    res.status(500).json({
+      sucesso: false,
+      erro: 'Erro interno no servidor ao buscar dados.'
+    });
+  }
+});
+
+/* Exemplo para testar diretamento no navegador
+fetch('http://localhost:3333/chatpro/eventos', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({"nome":"jonathan"})
+})
+.then(resposta => resposta.json())
+.then(resultado => {
+  console.log("Sucesso:", resultado);
+})
+.catch(erro => {
+  console.error("Erro na requisição:", erro);
+});
+*/
+
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
@@ -70,6 +102,7 @@ app.post("/chatpro/eventos", async (req, res) => {
       let mensagem = "";
       let pushname = "";
       let timestamp = 0;
+      const regex_telefone = /^([1-9]{2})(([1-9]{2}))(\d{4,5})(\d{4})$/;
 
       switch (tipo) {
         case "send_text_message":
@@ -80,7 +113,7 @@ app.post("/chatpro/eventos", async (req, res) => {
           console.log(`[server.js] ${tipo} recebido`);
           console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
 
-          telefone = req.body.Body.Info.RemoteJid.substring(1, req.body.Body.Info.RemoteJid.indexOf('@'));
+          telefone = req.body.Body.Info.RemoteJid.substring(0, req.body.Body.Info.RemoteJid.indexOf('@'));
           mensagem = req.body.Body.Text;
           if (req.body.Body.Info.FromMe === false) {
             pushname = req.body.Body.Info.PushName;
@@ -93,7 +126,7 @@ app.post("/chatpro/eventos", async (req, res) => {
       }
 
       //verifica se a variavel possui um valor valido
-      if (telefone.trim() && mensagem.trim()) {
+      if (telefone.trim() && mensagem.trim() && regex_telefone.test(telefone)) {
         registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp });
 
         // Requisição ao Supabase
