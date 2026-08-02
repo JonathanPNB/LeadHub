@@ -64,10 +64,12 @@ async function cadastrarJetimobContatos(registros) {
 app.post("/chatpro/eventos", async (req, res) => {
   try {
     const tipo = req.body.type || req.body.Type;
-    if (!tipo.trim() === false) {
+    if (tipo) {
       const registros = [];
       let telefone = "";
       let mensagem = "";
+      let pushname = "";
+      let timestamp = 0;
 
       switch (tipo) {
         case "send_text_message":
@@ -76,8 +78,14 @@ app.post("/chatpro/eventos", async (req, res) => {
         case "sent_message":
         case "send_message":
           console.log(`[server.js] ${tipo} recebido`);
+          console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
+
           telefone = req.body.Body.Info.RemoteJid.substring(1, req.body.Body.Info.RemoteJid.indexOf('@'));
           mensagem = req.body.Body.Text;
+          if (req.body.Body.Info.FromMe === false) {
+            pushname = req.body.Body.Info.PushName;
+          }
+          timestamp = req.body.Body.Info.Source.messageTimestamp;
           break;
         default:
           console.log(`[server.js] ${tipo} recebido e não tratado`);
@@ -85,8 +93,8 @@ app.post("/chatpro/eventos", async (req, res) => {
       }
 
       //verifica se a variavel possui um valor valido
-      if ((!telefone.trim() || !mensagem.trim()) === false) {
-        registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem });
+      if (telefone.trim() && mensagem.trim()) {
+        registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp });
 
         // Requisição ao Supabase
         const { data, error } = await supabase
@@ -105,7 +113,6 @@ app.post("/chatpro/eventos", async (req, res) => {
         }
       }
 
-      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
     }
     // Retorno de sucesso
     res.json({ sucesso: true });
