@@ -66,24 +66,24 @@ app.post("/chatpro/eventos", async (req, res) => {
 
     console.error(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req, null, 2)}`);
     // Requisição ao Supabase
-    const { data, error } = await supabase
-      .from("Eventos_chatPro")
-      .insert(req);
+    // const { data, error } = await supabase
+    //   .from("Eventos_chatPro")
+    //   .insert(req);
 
-    // Verifica se o Supabase retornou um erro de banco/regra
-    if (error) {
-      console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
-      console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
-      return res.status(400).json({
-        sucesso: false,
-        error: error.message,
-        details: error.details
-      });
-    }
+    // // Verifica se o Supabase retornou um erro de banco/regra
+    // if (error) {
+    //   console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
+    //   console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
+    //   return res.status(400).json({
+    //     sucesso: false,
+    //     error: error.message,
+    //     details: error.details
+    //   });
+    // }
 
-    console.log(`[${dataHora()}][server.js] dados: ${JSON.stringify(data, null, 2)}`);
+    // console.log(`[${dataHora()}][server.js] dados: ${JSON.stringify(data, null, 2)}`);
     // Retorno de sucesso
-    res.json({ sucesso: true, dados: data });
+    res.json({ sucesso: true, dados: 'data' });
 
   } catch (err) {
     // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
@@ -101,7 +101,7 @@ app.get('/jetimob/leads', async (req, res) => {
     // Requisição ao Supabase
     const { data, error } = await supabase
       .from('Contatos_JetiMob')
-      .select('*');
+      .select('nome_contato, num_telefone');
 
     // Verifica se o Supabase retornou um erro de banco/regra
     if (error) {
@@ -114,7 +114,6 @@ app.get('/jetimob/leads', async (req, res) => {
       });
     }
 
-    console.log("[server.js] dados: " + data);
     // Retorno de sucesso
     res.json({ sucesso: true, dados: data });
 
