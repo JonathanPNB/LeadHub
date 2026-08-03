@@ -63,7 +63,7 @@ async function cadastrarJetimobContatos(registros) {
 app.get('/leads', async (req, res) => {
   try {
     // Retorno de sucesso
-    res.json({ sucesso: true});
+    res.json({ sucesso: true });
 
   } catch (err) {
     // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
@@ -111,7 +111,6 @@ app.post("/chatpro/eventos", async (req, res) => {
         case "sent_message":
         case "send_message":
           console.log(`[server.js] ${tipo} recebido`);
-          console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
 
           telefone = req.body.Body.Info.RemoteJid.substring(0, req.body.Body.Info.RemoteJid.indexOf('@'));
           mensagem = req.body.Body.Text;
@@ -147,6 +146,7 @@ app.post("/chatpro/eventos", async (req, res) => {
       }
 
     }
+    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
     // Retorno de sucesso
     res.json({ sucesso: true });
 
@@ -159,38 +159,6 @@ app.post("/chatpro/eventos", async (req, res) => {
     });
   }
 });
-
-// Rota GET com Try/Catch
-// app.get('/jetimob/leads', async (req, res) => {
-//   try {
-//     // Requisição ao Supabase
-//     const { data, error } = await supabase
-//       .from('Contatos_JetiMob')
-//       .select('nome_contato, num_telefone');
-
-//     // Verifica se o Supabase retornou um erro de banco/regra
-//     if (error) {
-//       console.error("[server.js] error.message: " + error.message);
-//       console.error("[server.js] error.details: " + error.details);
-//       return res.status(400).json({
-//         sucesso: false,
-//         error: error.message,
-//         details: error.details
-//       });
-//     }
-
-//     // Retorno de sucesso
-//     res.json({ sucesso: true, dados: data });
-
-//   } catch (err) {
-//     // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
-//     console.error('Erro interno no servidor:', err);
-//     res.status(500).json({
-//       sucesso: false,
-//       erro: 'Erro interno no servidor ao buscar dados.'
-//     });
-//   }
-// });
 
 app.listen(process.env.PORT, () => {
   console.log(`[${dataHora()}] API rodando na porta ${process.env.PORT}`);
