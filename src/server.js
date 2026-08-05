@@ -95,6 +95,7 @@ fetch('http://localhost:3333/chatpro/eventos', {
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
+    console.log(`[server.js] /chatpro/eventos recebido ${req.body}`);
     const tipo = req.body.new.type || req.body.new.Type;
     if (tipo) {
       const registros = [];
