@@ -95,7 +95,7 @@ fetch('http://localhost:3333/chatpro/eventos', {
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
-    const tipo = req.body.type || req.body.Type;
+    const tipo = req.body.new.type || req.body.new.Type;
     if (tipo) {
       const registros = [];
       let telefone = "";
@@ -112,12 +112,12 @@ app.post("/chatpro/eventos", async (req, res) => {
         case "send_message":
           console.log(`[server.js] ${tipo} recebido`);
 
-          telefone = req.body.Body.Info.RemoteJid.substring(0, req.body.Body.Info.RemoteJid.indexOf('@'));
-          mensagem = req.body.Body.Text;
-          if (req.body.Body.Info.FromMe === false) {
-            pushname = req.body.Body.Info.PushName;
-          }
-          timestamp = req.body.Body.Info.Source.messageTimestamp;
+          telefone = req.body.new.number.substring(0, req.body.new.number.indexOf('@'));
+          mensagem = req.body.new.message;
+          // if (req.body.new.from_me === false) {
+          //   pushname = req.body.Body.Info.PushName;
+          // }
+          timestamp = req.body.timestamp;
           break;
         default:
           console.log(`[server.js] ${tipo} recebido e não tratado`);
@@ -153,9 +153,9 @@ app.post("/chatpro/eventos", async (req, res) => {
   } catch (err) {
     // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
     console.error(`[${dataHora()}] Erro interno no servidor: ${err}`);
-    res.status(500).json({
+    res.status(400).json({
       sucesso: false,
-      erro: "Erro interno no servidor ao buscar dados."
+      erro: "Requisição inválida"
     });
   }
 });
