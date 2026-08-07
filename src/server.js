@@ -95,9 +95,14 @@ fetch('http://localhost:3333/chatpro/eventos', {
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
-    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
+    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.event} - ${req.body.action}`);
+    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.number.substring(0, req.body.new.number.indexOf('@'))} - ${req.body.new.message}`);
+    if (req.body.new.last_message && req.body.new.last_type) {
+      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.last_message} - ${req.body.new.last_type}`)
+    }
     const tipo = req.body.new.type || req.body.new.Type;
     if (tipo) {
+      console.log(`[server.js] ${tipo} recebido`);
       const registros = [];
       let telefone = "";
       let mensagem = "";
@@ -111,13 +116,10 @@ app.post("/chatpro/eventos", async (req, res) => {
         case "receveid_message":
         case "sent_message":
         case "send_message":
-          console.log(`[server.js] ${tipo} recebido`);
 
           telefone = req.body.new.number.substring(0, req.body.new.number.indexOf('@'));
           mensagem = req.body.new.message;
-          // if (req.body.new.from_me === false) {
-          //   pushname = req.body.Body.Info.PushName;
-          // }
+
           timestamp = req.body.timestamp;
           break;
         default:
