@@ -96,7 +96,13 @@ fetch('http://localhost:3333/chatpro/eventos', {
 app.post("/chatpro/eventos", async (req, res) => {
   try {
     console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.event} - ${req.body.action}`);
-    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.number.substring(0, req.body.new.number.indexOf('@'))} - ${req.body.new.message}`);
+
+    if(req.body.new.number) {
+      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.number.substring(0, req.body.new.number.indexOf('@'))} - ${req.body.new.message}`);
+    } else {
+      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
+    }
+
     if (req.body.new.last_message && req.body.new.last_type) {
       console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.last_message} - ${req.body.new.last_type}`)
     }
