@@ -95,7 +95,7 @@ fetch('http://localhost:3333/chatpro/eventos', {
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
-    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.event} - ${req.body.action}`);
+    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.event} - ${req.body.action} sessionId: ${req.body.new.session_id}`);
 
     if(req.body.new.number) {
       console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.number.substring(0, req.body.new.number.indexOf('@'))} - ${req.body.new.message}`);
