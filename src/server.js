@@ -9,7 +9,13 @@ import { getChatproContatos } from "./chatpro/contatos.js";
 import { getSupaBase_ContatosJetiMob } from "./database/contatos_jetimob.js";
 
 const app = express();
-app.use(express.json());
+app.use(express.json({
+  verify: (req, _res, buf) => {
+    if (req.path === "/chatpro/eventos") {
+      req.rawBody = buf;
+    }
+  },
+}));
 
 //Busca os contatos ja cadastrados no Jetimob e insere na tabela "Contatos_JetiMob"
 async function syncJetimobLeads() {
@@ -95,6 +101,17 @@ fetch('http://localhost:3333/chatpro/eventos', {
 // Rota GET com Try/Catch
 app.post("/chatpro/eventos", async (req, res) => {
   try {
+    //ENVIO DE WEBHOOK PARA TESTES
+    fetch(process.env.WEBHOOK_EVENTOS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": req.get("content-type") || "application/json",
+      },
+      body: req.rawBody ?? JSON.stringify(req.body),
+    }).catch((webhookErr) => {
+      console.error(`[${dataHora()}][server.js] Erro ao enviar webhook chatpro/eventos:`, webhookErr);
+    });
+
     console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.event} - ${req.body.action} sessionId: ${req.body.new.session_id}`);
 
     if(req.body.new.number) {
