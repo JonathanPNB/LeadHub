@@ -132,6 +132,7 @@ app.post("/chatpro/eventos", async (req, res) => {
       let pushname = "";
       let timestamp = 0;
       const regex_telefone = /^([1-9]{2})(([1-9]{2}))(\d{4,5})(\d{4})$/;
+      let sessionid = "";
 
       switch (tipo) {
         case "send_text_message":
@@ -142,7 +143,7 @@ app.post("/chatpro/eventos", async (req, res) => {
 
           telefone = req.body.new.number.substring(0, req.body.new.number.indexOf('@'));
           mensagem = req.body.new.message;
-
+          sessionid = req.body.new.session_id;
           timestamp = req.body.timestamp;
           break;
         default:
@@ -152,7 +153,7 @@ app.post("/chatpro/eventos", async (req, res) => {
 
       //verifica se a variavel possui um valor valido
       if (telefone.trim() && mensagem.trim() && regex_telefone.test(telefone)) {
-        registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp });
+        registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp, session_id: sessionid });
 
         // Requisição ao Supabase
         const { data, error } = await supabase
