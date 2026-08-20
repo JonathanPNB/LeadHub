@@ -26,7 +26,7 @@ export function obterMensagemNomeNormalizada() {
 }
 
 export function aguardar(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, parseInt(ms.replace(/_/g, ''), 10)));
 }
 
 function obterMaxRetry429() {
