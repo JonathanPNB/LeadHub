@@ -7,6 +7,7 @@ import { getJetimobLeads } from "./jetimob/leads.js";
 import { dataHora } from "./util/util.js";
 import { getChatproContatos } from "./chatpro/contatos.js";
 import { getSupaBase_ContatosJetiMob } from "./database/contatos_jetimob.js";
+import { syncChatproEventos } from "./chatpro/sync.js";
 
 const app = express();
 app.use(express.json({
@@ -186,6 +187,24 @@ app.post("/chatpro/eventos", async (req, res) => {
   }
 });
 
+let syncChatproEmAndamento = false;
+
+async function executarSyncChatproEventos() {
+  if (syncChatproEmAndamento) {
+    console.log(`[${dataHora()}][server.js] Sincronização ChatPro já em andamento, execução ignorada`);
+    return;
+  }
+
+  syncChatproEmAndamento = true;
+  try {
+    await syncChatproEventos();
+  } catch (error) {
+    console.error(`[${dataHora()}][server.js] Falha na sincronização ChatPro: ${error.message}`);
+  } finally {
+    syncChatproEmAndamento = false;
+  }
+}
+
 app.listen(process.env.PORT, () => {
   console.log(`[${dataHora()}] API rodando na porta ${process.env.PORT}`);
 
@@ -195,4 +214,17 @@ app.listen(process.env.PORT, () => {
   const cronSchedule = process.env.JETIMOB_CRON_SCHEDULE || "0 * * * *";
   cron.schedule(cronSchedule, syncJetimobLeads);
   console.log(`[${dataHora()}][server.js] Cron job Jetimob agendado: ${cronSchedule}`);
+
+  executarSyncChatproEventos();
+
+  const chatproCronSchedule = process.env.CHATPRO_CRON_SCHEDULE || "*/5 * * * *";
+  cron.schedule(chatproCronSchedule, executarSyncChatproEventos);
+  console.log(`[${dataHora()}][server.js] Cron job ChatPro agendado: ${chatproCronSchedule}`);
 });
+
+/* 
+BUSCAR TODAS AS SESSOES ATRAVES DO ENDPOINT https://sparks.chatpro.com.br/sessions/list
+BUSCAR TODAS AS MENSAGENS DE CADA SESSAO COM O ENDPOINT https://sparks.chatpro.com.br/messages/getAll
+ORDENAR AS MENSAGENS 'ts_receive'
+IDENTIFICAR O ENVIO DA MENSAGEM ANCORA (PERGUNTA DO NOME)
+IDENTIFICAR O NOME DO LEAD (ANTES OU DEPOIS DA MENSAGEM ANCORA) */
