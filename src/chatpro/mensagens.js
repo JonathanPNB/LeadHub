@@ -1,5 +1,6 @@
 import { dataHora, fetchComRetry429 } from "../util/util.js";
 import { filtrarEventosNovos, getEventosChatProPorSessao, inserirEventosChatPro } from "../database/eventos_chatpro.js";
+import { getTelefonesContatosJetimob, telefoneCadastradoNoJetimob } from "../database/contatos_jetimob.js";
 
 const SPARKS_MESSAGES_GET_ALL_URL = "https://sparks.chatpro.com.br/messages/getAll";
 const PAGE_LIMIT = 100;
@@ -43,6 +44,25 @@ function compararTsReceive(a, b) {
 
 export function ordenarMensagensPorTsReceive(mensagens) {
   return [...mensagens].sort(compararTsReceive);
+}
+
+function obterTelefoneSessao(sessao) {
+  const numero = sessao?.number
+    ?? sessao?.lead?.number
+    ?? sessao?.lead?.phone
+    ?? sessao?.contact?.number
+    ?? "";
+
+  return obterTelefone({ number: numero });
+}
+
+function obterTelefoneConversa(sessao, registros) {
+  const telefoneSessao = obterTelefoneSessao(sessao);
+  if (telefoneSessao) {
+    return telefoneSessao;
+  }
+
+  return registros.find((registro) => registro.num_telefone)?.num_telefone ?? "";
 }
 
 function obterTelefone(mensagem) {
@@ -157,6 +177,8 @@ export async function getChatproMensagensPorSessao(sessionId) {
 // Busca todas as mensagens de cada sessão informada
 export async function getChatproMensagensPorSessoes(sessoes) {
   const resultados = [];
+  const telefonesJetimob = await getTelefonesContatosJetimob();
+  console.log(`[${dataHora()}][mensagens.js] ${telefonesJetimob.size} telefone(s) cadastrado(s) em Contatos_JetiMob`);
 
   for (const sessao of sessoes) {
     const sessionId = obterSessionId(sessao);
@@ -166,12 +188,25 @@ export async function getChatproMensagensPorSessoes(sessoes) {
       continue;
     }
 
+    const telefoneSessao = obterTelefoneSessao(sessao);
+    if (telefoneSessao && telefoneCadastradoNoJetimob(telefoneSessao, telefonesJetimob)) {
+      console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneSessao} já cadastrado no Jetimob, conversa ignorada`);
+      continue;
+    }
+
     console.log(`[${dataHora()}][mensagens.js] Buscando mensagens da sessão ${sessionId}...`);
     const mensagens = await getChatproMensagensPorSessao(sessionId);
     const mensagensOrdenadas = ordenarMensagensPorTsReceive(mensagens);
     console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: ${mensagensOrdenadas.length} mensagem(ns)`);
 
     const registros = mensagensParaRegistros(mensagensOrdenadas, sessionId);
+    const telefoneConversa = obterTelefoneConversa(sessao, registros);
+
+    if (telefoneConversa && telefoneCadastradoNoJetimob(telefoneConversa, telefonesJetimob)) {
+      console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneConversa} já cadastrado no Jetimob, conversa não gravada`);
+      resultados.push({ sessionId, sessao, mensagens: mensagensOrdenadas });
+      continue;
+    }
 
     if (registros.length === 0) {
       console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: nenhum registro válido para inserir`);

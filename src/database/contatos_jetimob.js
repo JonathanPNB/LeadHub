@@ -1,6 +1,42 @@
 import { dataHora } from "../util/util.js";
 import { supabase } from "../database/supabase.js";
 
+export function normalizarTelefone(telefone) {
+    return String(telefone ?? "").replace(/\D/g, "");
+}
+
+export function telefoneCadastradoNoJetimob(telefone, telefonesCadastrados) {
+    const digitos = normalizarTelefone(telefone);
+
+    if (!digitos) {
+        return false;
+    }
+
+    const variantes = [digitos];
+
+    if (digitos.startsWith("55") && digitos.length > 11) {
+        variantes.push(digitos.slice(2));
+    } else if (digitos.length === 10 || digitos.length === 11) {
+        variantes.push(`55${digitos}`);
+    }
+
+    return variantes.some((variante) => telefonesCadastrados.has(variante));
+}
+
+export async function getTelefonesContatosJetimob() {
+    const contatos = await getSupaBase_ContatosJetiMob();
+    const telefones = new Set();
+
+    for (const contato of contatos ?? []) {
+        const digitos = normalizarTelefone(contato.num_telefone);
+        if (digitos) {
+            telefones.add(digitos);
+        }
+    }
+
+    return telefones;
+}
+
 //Busca os contatos ja cadastrados na tabela Contatos_jetimob na supabase
 export async function getSupaBase_ContatosJetiMob() {
     try {

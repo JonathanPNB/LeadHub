@@ -52,7 +52,7 @@ export async function fetchComRetry429(url, options) {
             throw new Error(`Erro na requisição: 429 após ${maxRetry} tentativa(s) de retry ${detalhe}`.trim());
         }
 
-        console.log(`[${dataHora()}] Rate limit 429 em ${url}. Tentativa ${tentativas}/${maxRetry} em 30 segundos...`);
+        console.log(`[${dataHora()}] Rate limit 429 em ${url}. Tentativa ${tentativas}/${maxRetry} em ${parseInt(process.env.CHATPRO_RETRY_429_MS.replace(/_/g, ""), 10)/1000} segundos...`);
         await aguardar(process.env.CHATPRO_RETRY_429_MS);
     }
 }

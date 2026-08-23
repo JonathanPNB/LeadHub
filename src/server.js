@@ -6,7 +6,7 @@ import { supabase } from "./database/supabase.js";
 import { getJetimobLeads } from "./jetimob/leads.js";
 import { dataHora } from "./util/util.js";
 import { getChatproContatos } from "./chatpro/contatos.js";
-import { getSupaBase_ContatosJetiMob } from "./database/contatos_jetimob.js";
+import { getSupaBase_ContatosJetiMob, getTelefonesContatosJetimob, telefoneCadastradoNoJetimob } from "./database/contatos_jetimob.js";
 import { syncChatproEventos } from "./chatpro/sync.js";
 
 const app = express();
@@ -154,22 +154,28 @@ app.post("/chatpro/eventos", async (req, res) => {
 
       //verifica se a variavel possui um valor valido
       if (telefone.trim() && mensagem.trim() && regex_telefone.test(telefone)) {
-        registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp, session_id: sessionid });
+        const telefonesJetimob = await getTelefonesContatosJetimob();
 
-        // Requisição ao Supabase
-        const { data, error } = await supabase
-          .from("Eventos_chatPro")
-          .insert(registros);
+        if (telefoneCadastradoNoJetimob(telefone, telefonesJetimob)) {
+          console.log(`[${dataHora()}][server.js] chatpro/eventos: telefone ${telefone} já cadastrado no Jetimob, evento não gravado`);
+        } else {
+          registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp, session_id: sessionid });
 
-        // // Verifica se o Supabase retornou um erro de banco/regra
-        if (error) {
-          console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
-          console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
-          return res.status(400).json({
-            sucesso: false,
-            error: error.message,
-            details: error.details
-          });
+          // Requisição ao Supabase
+          const { data, error } = await supabase
+            .from("Eventos_chatPro")
+            .insert(registros);
+
+          // // Verifica se o Supabase retornou um erro de banco/regra
+          if (error) {
+            console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
+            console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
+            return res.status(400).json({
+              sucesso: false,
+              error: error.message,
+              details: error.details
+            });
+          }
         }
       }
 
