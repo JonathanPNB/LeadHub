@@ -1,6 +1,7 @@
 import { dataHora, normalizarTexto, obterMensagemNomeNormalizada } from "../util/util.js";
 import { getEventosChatProOrdenados } from "../database/eventos_chatpro.js";
 import { getTelefonesContatosJetimob, telefoneCadastradoNoJetimob } from "../database/contatos_jetimob.js";
+import { getTelefonesLeads, inserirLeads } from "../database/leads.js";
 
 const TIPOS_ENVIO = new Set([
   "sent_message",
@@ -179,17 +180,22 @@ export function encontrarNomeLead(mensagens, ancora, ancoraNormalizada) {
 export async function identificarMensagemNomePorConversa() {
   const ancoraNormalizada = obterMensagemNomeNormalizada();
   const telefonesJetimob = await getTelefonesContatosJetimob();
+  const telefonesLeads = await getTelefonesLeads();
   console.log(`[${dataHora()}][ancora.js] MENSAGEM_NOME normalizada: ${ancoraNormalizada}`);
-  // console.log(`[${dataHora()}][ancora.js] ${telefonesJetimob.size} telefone(s) cadastrado(s) em Contatos_JetiMob serão ignorados`);
 
   const eventos = await getEventosChatProOrdenados();
   const conversas = agruparEventosPorConversa(eventos);
   const resultados = [];
+  const leadsParaInserir = [];
 
   for (const [chave, mensagens] of conversas) {
     const numTelefone = telefoneDaConversa(mensagens);
 
     if (numTelefone && telefoneCadastradoNoJetimob(numTelefone, telefonesJetimob)) {
+      continue;
+    }
+
+    if (numTelefone && telefoneCadastradoNoJetimob(numTelefone, telefonesLeads)) {
       continue;
     }
 
@@ -211,16 +217,46 @@ export async function identificarMensagemNomePorConversa() {
 
     if (ancora && lead.nome) {
       console.log(`[${dataHora()}][ancora.js] Conversa ${chave}: âncora encontrada, nome="${lead.nome}" (${lead.origem})`);
+
+      if (numTelefone) {
+        leadsParaInserir.push({
+          nome_contato: lead.nome,
+          num_telefone: numTelefone,
+        });
+      }
     } else if (ancora) {
       console.log(`[${dataHora()}][ancora.js] Conversa ${chave}: âncora encontrada, nome do lead não identificado`);
     } else {
-      console.log(`[${dataHora()}][ancora.js] Conversa ${chave}: MENSAGEM_NOME não encontrada`);
+      // console.log(`[${dataHora()}][ancora.js] Conversa ${chave}: MENSAGEM_NOME não encontrada`);
     }
   }
 
   const comAncora = resultados.filter((item) => item.ancora).length;
   const comNome = resultados.filter((item) => item.nome_lead).length;
-  console.log(`[${dataHora()}][ancora.js] ${resultados.length} conversa(s) fora do Jetimob | ${comAncora} com âncora | ${comNome} com nome`);
+  console.log(`[${dataHora()}][ancora.js] ${resultados.length} conversa(s) novas | ${comAncora} com âncora | ${comNome} com nome`);
+
+  if (leadsParaInserir.length > 0) {
+    const leadsNovos = [];
+    const telefonesLote = new Set(telefonesLeads);
+
+    for (const lead of leadsParaInserir) {
+      if (telefoneCadastradoNoJetimob(lead.num_telefone, telefonesLote)) {
+        continue;
+      }
+
+      leadsNovos.push(lead);
+      const digitos = String(lead.num_telefone).replace(/\D/g, "");
+      if (digitos) {
+        telefonesLote.add(digitos);
+      }
+    }
+
+    if (leadsNovos.length > 0) {
+      await inserirLeads(leadsNovos);
+    } else {
+      console.log(`[${dataHora()}][ancora.js] Nenhum lead novo para inserir (${leadsParaInserir.length} já cadastrado(s) em Leads)`);
+    }
+  }
 
   return resultados;
 }
