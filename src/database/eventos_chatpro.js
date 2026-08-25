@@ -3,6 +3,37 @@ import { supabase } from "./supabase.js";
 
 const PAGE_LIMIT = 1000;
 
+export async function getEventosChatProOrdenados() {
+  const eventos = [];
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("Eventos_chatPro")
+      .select("message_id, session_id, messageTimestamp, num_telefone, tipo_evento, mensagem, PushName")
+      .order("messageTimestamp", { ascending: true })
+      .range(offset, offset + PAGE_LIMIT - 1);
+
+    if (error) {
+      console.error(`[${dataHora()}][eventos_chatpro.js] error.message: ${error.message}`);
+      console.error(`[${dataHora()}][eventos_chatpro.js] error.details: ${error.details}`);
+      throw error;
+    }
+
+    const pagina = data ?? [];
+    eventos.push(...pagina);
+
+    if (pagina.length < PAGE_LIMIT) {
+      break;
+    }
+
+    offset += PAGE_LIMIT;
+  }
+
+  console.log(`[${dataHora()}][eventos_chatpro.js] ${eventos.length} evento(s) lido(s) ordenados por messageTimestamp`);
+  return eventos;
+}
+
 export function chaveEventoChatPro(registro) {
   if (registro?.message_id) {
     return `id:${registro.message_id}`;

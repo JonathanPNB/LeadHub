@@ -190,26 +190,26 @@ export async function getChatproMensagensPorSessoes(sessoes) {
 
     const telefoneSessao = obterTelefoneSessao(sessao);
     if (telefoneSessao && telefoneCadastradoNoJetimob(telefoneSessao, telefonesJetimob)) {
-      console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneSessao} já cadastrado no Jetimob, conversa ignorada`);
+      console.warn(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneSessao} já cadastrado no Jetimob, conversa ignorada`);
       continue;
     }
 
-    console.log(`[${dataHora()}][mensagens.js] Buscando mensagens da sessão ${sessionId}...`);
+    // console.log(`[${dataHora()}][mensagens.js] Buscando mensagens da sessão ${sessionId}...`);
     const mensagens = await getChatproMensagensPorSessao(sessionId);
     const mensagensOrdenadas = ordenarMensagensPorTsReceive(mensagens);
-    console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: ${mensagensOrdenadas.length} mensagem(ns)`);
+    // console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: ${mensagensOrdenadas.length} mensagem(ns)`);
 
     const registros = mensagensParaRegistros(mensagensOrdenadas, sessionId);
     const telefoneConversa = obterTelefoneConversa(sessao, registros);
 
     if (telefoneConversa && telefoneCadastradoNoJetimob(telefoneConversa, telefonesJetimob)) {
-      console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneConversa} já cadastrado no Jetimob, conversa não gravada`);
+      console.warn(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneConversa} já cadastrado no Jetimob, conversa não gravada`);
       resultados.push({ sessionId, sessao, mensagens: mensagensOrdenadas });
       continue;
     }
 
     if (registros.length === 0) {
-      console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: nenhum registro válido para inserir`);
+      // console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: nenhum registro válido para inserir`);
     } else {
       const eventosExistentes = await getEventosChatProPorSessao(sessionId);
       const registrosNovos = filtrarEventosNovos(registros, eventosExistentes);
@@ -218,7 +218,7 @@ export async function getChatproMensagensPorSessoes(sessoes) {
         console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: ${registrosNovos.length} novo(s) / ${registros.length - registrosNovos.length} duplicado(s)`);
         await inserirEventosChatPro(registrosNovos);
       } else {
-        console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: nenhum registro novo para inserir (${registros.length} duplicado(s))`);
+        // console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: nenhum registro novo para inserir (${registros.length} duplicado(s))`);
       }
     }
 
