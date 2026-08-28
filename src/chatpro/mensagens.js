@@ -178,7 +178,7 @@ export async function getChatproMensagensPorSessao(sessionId) {
 export async function getChatproMensagensPorSessoes(sessoes) {
   const resultados = [];
   const telefonesJetimob = await getTelefonesContatosJetimob();
-  console.log(`[${dataHora()}][mensagens.js] ${telefonesJetimob.size} telefone(s) cadastrado(s) em Contatos_JetiMob`);
+  // console.log(`[${dataHora()}][mensagens.js] ${telefonesJetimob.size} telefone(s) cadastrado(s) em Contatos_JetiMob`);
 
   for (const sessao of sessoes) {
     const sessionId = obterSessionId(sessao);

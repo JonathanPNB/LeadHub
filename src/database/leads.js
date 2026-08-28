@@ -51,3 +51,37 @@ export async function inserirLeads(registros) {
 
   console.log(`[${dataHora()}][leads.js] ${registros.length} lead(s) inserido(s).`);
 }
+
+export async function buscarLeadsSupaBase() {
+  const { data, error } = await supabase
+    .from("Leads")
+    .select("nome_contato, num_telefone")
+    .is('integrado_at', null)
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error(`[${dataHora()}][leads.js] error.message: ${error.message}`);
+    console.error(`[${dataHora()}][leads.js] error.details: ${error.details}`);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function preencherLeadIntegrado(num_telefone) {
+  try {
+    const { data, error } = await supabase
+      .from("Leads")
+      .update({ "integrado_at": new Date().toISOString() })
+      .eq('num_telefone', num_telefone);
+
+    if (error) {
+      console.error(`[${dataHora()}][leads.js] error.message: ${error.message}`);
+      console.error(`[${dataHora()}][leads.js] error.details: ${error.details}`);
+      throw error;
+    }
+
+  } catch (err) {
+    console.error('Erro ao inserir leads:', err.message);
+  }
+}
