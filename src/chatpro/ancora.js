@@ -1,23 +1,14 @@
-import { dataHora, normalizarTexto, obterMensagemNomeNormalizada } from "../util/util.js";
+import { dataHora, normalizarTexto, obterMensagensNomeNormalizadas } from "../util/util.js";
 import { getEventosChatProOrdenados } from "../database/eventos_chatpro.js";
 import { getTelefonesContatosJetimob, telefoneCadastradoNoJetimob } from "../database/contatos_jetimob.js";
 import { getTelefonesLeads, inserirLeads } from "../database/leads.js";
 
-const TIPOS_ENVIO = new Set([
-  "sent_message",
-  "send_message",
-  "send_text_message",
-]);
-
-const TIPOS_RECEBIMENTO = new Set([
-  "received_message",
-  "receveid_message",
-]);
-
+const JANELA_MENSAGENS_NOME = 3;
 const PREFIXOS_NOME = /^(?:meu nome [ée]|me chamo|eu sou|sou o|sou a)\s+/i;
 const SAUDACOES = new Set([
   "oi", "ola", "oie", "olaa", "ok", "sim", "nao", "bom dia", "boa tarde", "boa noite",
-  "obrigado", "obrigada", "valeu", "blz", "beleza",
+  "obrigado", "obrigada", "valeu", "blz", "beleza", "casa", "prédio", "Prédio", "Financeiro*",
+  "Casa",
 ]);
 
 function chaveConversa(evento) {
@@ -66,7 +57,15 @@ function telefoneDaConversa(mensagens) {
   return mensagens.find((evento) => evento.num_telefone)?.num_telefone ?? "";
 }
 
-export function mensagemCorrespondeAncora(evento, ancoraNormalizada) {
+function frasesAncora(ancorasNormalizadas) {
+  if (!ancorasNormalizadas) {
+    return [];
+  }
+
+  return Array.isArray(ancorasNormalizadas) ? ancorasNormalizadas : [ancorasNormalizadas];
+}
+
+function mensagemCorrespondeFrase(evento, ancoraNormalizada) {
   const texto = normalizarTexto(evento?.mensagem);
 
   if (!texto || !ancoraNormalizada) {
@@ -86,18 +85,12 @@ export function mensagemCorrespondeAncora(evento, ancoraNormalizada) {
   return false;
 }
 
-function encontrarMensagemAncora(mensagens, ancoraNormalizada) {
-  const candidatas = mensagens.filter((evento) => mensagemCorrespondeAncora(evento, ancoraNormalizada));
-
-  if (candidatas.length === 0) {
-    return null;
-  }
-
-  return candidatas.find((evento) => TIPOS_ENVIO.has(evento.tipo_evento)) ?? candidatas[0];
+export function mensagemCorrespondeAncora(evento, ancorasNormalizadas) {
+  return frasesAncora(ancorasNormalizadas).some((frase) => mensagemCorrespondeFrase(evento, frase));
 }
 
-function ehMensagemRecebida(evento) {
-  return TIPOS_RECEBIMENTO.has(evento?.tipo_evento) || !TIPOS_ENVIO.has(evento?.tipo_evento);
+function encontrarMensagensAncora(mensagens, ancorasNormalizadas) {
+  return mensagens.filter((evento) => mensagemCorrespondeAncora(evento, ancorasNormalizadas));
 }
 
 function pareceNome(texto) {
@@ -135,7 +128,7 @@ function indiceDaAncora(mensagens, ancora) {
   ));
 }
 
-export function encontrarNomeLead(mensagens, ancora, ancoraNormalizada) {
+export function encontrarNomeLead(mensagens, ancora, ancorasNormalizadas) {
   if (!ancora) {
     return { nome: "", origem: null, mensagem: null };
   }
@@ -145,9 +138,11 @@ export function encontrarNomeLead(mensagens, ancora, ancoraNormalizada) {
     return { nome: "", origem: null, mensagem: null };
   }
 
-  for (let i = indice + 1; i < mensagens.length; i += 1) {
+  const fim = Math.min(mensagens.length, indice + 1 + JANELA_MENSAGENS_NOME);
+
+  for (let i = indice + 1; i < fim; i += 1) {
     const evento = mensagens[i];
-    if (!ehMensagemRecebida(evento) || mensagemCorrespondeAncora(evento, ancoraNormalizada)) {
+    if (mensagemCorrespondeAncora(evento, ancorasNormalizadas)) {
       continue;
     }
 
@@ -157,31 +152,14 @@ export function encontrarNomeLead(mensagens, ancora, ancoraNormalizada) {
     }
   }
 
-  for (let i = indice - 1; i >= 0; i -= 1) {
-    const evento = mensagens[i];
-    if (!ehMensagemRecebida(evento)) {
-      continue;
-    }
-
-    const nome = extrairNomeDoTexto(evento.mensagem);
-    if (nome) {
-      return { nome, origem: "antes", mensagem: evento };
-    }
-  }
-
-  const pushName = ancora.PushName || mensagens.find((evento) => evento.PushName)?.PushName;
-  if (pushName && pareceNome(pushName)) {
-    return { nome: String(pushName).trim(), origem: "pushname", mensagem: null };
-  }
-
   return { nome: "", origem: null, mensagem: null };
 }
 
 export async function identificarMensagemNomePorConversa() {
-  const ancoraNormalizada = obterMensagemNomeNormalizada();
+  const ancorasNormalizadas = obterMensagensNomeNormalizadas();
   const telefonesJetimob = await getTelefonesContatosJetimob();
   const telefonesLeads = await getTelefonesLeads();
-  console.log(`[${dataHora()}][ancora.js] MENSAGEM_NOME normalizada: ${ancoraNormalizada}`);
+  console.log(`[${dataHora()}][ancora.js] MENSAGEM_NOME normalizada(s): ${ancorasNormalizadas.join(" | ")}`);
 
   const eventos = await getEventosChatProOrdenados();
   const conversas = agruparEventosPorConversa(eventos);
@@ -199,8 +177,18 @@ export async function identificarMensagemNomePorConversa() {
       continue;
     }
 
-    const ancora = encontrarMensagemAncora(mensagens, ancoraNormalizada);
-    const lead = encontrarNomeLead(mensagens, ancora, ancoraNormalizada);
+    const ancoras = encontrarMensagensAncora(mensagens, ancorasNormalizadas);
+    let ancora = ancoras[0] ?? null;
+    let lead = { nome: "", origem: null, mensagem: null };
+
+    for (const candidata of ancoras) {
+      const encontrado = encontrarNomeLead(mensagens, candidata, ancorasNormalizadas);
+      if (encontrado.nome) {
+        ancora = candidata;
+        lead = encontrado;
+        break;
+      }
+    }
     const primeira = mensagens[0];
 
     resultados.push({

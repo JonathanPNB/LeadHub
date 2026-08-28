@@ -27,7 +27,7 @@ function intervaloHojeSaoPaulo() {
   const ano = partes.find((parte) => parte.type === "year").value;
   const mes = partes.find((parte) => parte.type === "month").value;
   const dia = partes.find((parte) => parte.type === "day").value;
-  const dataInicio = `${ano}-${mes}-${dia-7}`;
+  const dataInicio = `${ano}-${mes}-${dia-5}`;
   const dataFim = `${ano}-${mes}-${dia}`;
 
   return {

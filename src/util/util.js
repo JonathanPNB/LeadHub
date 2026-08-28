@@ -15,14 +15,23 @@ export function normalizarTexto(texto) {
         .trim();
 }
 
-export function obterMensagemNomeNormalizada() {
-    const mensagemNome = process.env.MENSAGEM_NOME;
+export function obterMensagensNomeNormalizadas() {
+    const mensagemNome = `${process.env.FRASE_01}|${process.env.FRASE_02}|${process.env.FRASE_03}|${process.env.FRASE_04}|${process.env.FRASE_05}|${process.env.FRASE_06}`;
 
     if (!mensagemNome?.trim()) {
         throw new Error("MENSAGEM_NOME é obrigatória no .env");
     }
 
-    return normalizarTexto(mensagemNome);
+    const frases = mensagemNome
+        .split("|")
+        .map((frase) => normalizarTexto(frase))
+        .filter(Boolean);
+
+    if (frases.length === 0) {
+        throw new Error("MENSAGEM_NOME é obrigatória no .env");
+    }
+
+    return frases;
 }
 
 export function aguardar(ms) {

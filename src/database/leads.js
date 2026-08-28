@@ -70,9 +70,28 @@ export async function buscarLeadsSupaBase() {
 
 export async function preencherLeadIntegrado(num_telefone) {
   try {
+    const partes = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      fractionalSecondDigits: 3, // Máximo nativo do JS (milisegundos)
+    }).formatToParts(new Date());
+    const ano = partes.find((parte) => parte.type === "year").value;
+    const mes = partes.find((parte) => parte.type === "month").value;
+    const dia = partes.find((parte) => parte.type === "day").value;
+    const hora = partes.find((parte) => parte.type === "hour").value;
+    const minuto = partes.find((parte) => parte.type === "minute").value;
+    const segundo = partes.find((parte) => parte.type === "second").value;
+    const milisegundo = partes.find((parte) => parte.type === "fractionalSecond").value;
+
+    const dataSupaBase = `${ano}-${mes}-${dia-5} ${hora}:${minuto}:${segundo}.${milisegundo}000+00`;
     const { data, error } = await supabase
       .from("Leads")
-      .update({ "integrado_at": new Date().toISOString() })
+      .update({ "integrado_at": dataSupaBase })
       .eq('num_telefone', num_telefone);
 
     if (error) {

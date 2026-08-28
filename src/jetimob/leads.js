@@ -47,7 +47,7 @@ export async function inserirLeadsJetiMob() {
         },
         body: JSON.stringify(body),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erro na requisição: ${response.status}`);
       } else {
@@ -59,6 +59,6 @@ export async function inserirLeadsJetiMob() {
   } catch (error) {
     console.error('Erro ao inserir leads:', error.message);
   }
-  
+
   console.log(`[${dataHora()}] inserirLeadsJetiMob Finalizado`)
 }
