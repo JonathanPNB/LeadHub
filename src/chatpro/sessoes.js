@@ -17,23 +17,7 @@ function chaveSessao(sessao) {
 }
 
 function intervaloHojeSaoPaulo() {
-  const partes = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-
-  const ano = partes.find((parte) => parte.type === "year").value;
-  const mes = partes.find((parte) => parte.type === "month").value;
-  const dia = partes.find((parte) => parte.type === "day").value;
-  const dataInicio = `${ano}-${mes}-${dia-5}`;
-  const dataFim = `${ano}-${mes}-${dia}`;
-
-  return {
-    start: new Date(`${dataInicio}T00:00:00.000-03:00`).toISOString(),
-    end: new Date(`${dataFim}T23:59:59.999-03:00`).toISOString(),
-  };
+  return new Date(`2026-09-02T00:00:00.000Z`).toISOString()
 }
 
 async function buscarPaginaSessoes({ instanceId, instanceToken, offset, limit, open, start, end }) {
@@ -43,7 +27,7 @@ async function buscarPaginaSessoes({ instanceId, instanceToken, offset, limit, o
     body.open = open;
   }
 
-  console.log(`[${dataHora()}][sessoes.js] Buscando sessões offset=${offset} limit=${limit} start=${start} end=${end}${typeof open === "boolean" ? ` open=${open}` : ""}`);
+  console.log(`[${dataHora()}][sessoes.js] Buscando sessões offset=${offset} limit=${limit} start=${start} ${typeof open === "boolean" ? ` open=${open}` : ""}`);
 
   const response = await fetchComRetry429(SPARKS_SESSIONS_LIST_URL, {
     method: "POST",
@@ -63,7 +47,7 @@ async function buscarPaginaSessoes({ instanceId, instanceToken, offset, limit, o
   return response.json();
 }
 
-async function buscarSessoesPorStatus({ instanceId, instanceToken, open, start, end }) {
+async function buscarSessoesPorStatus({ instanceId, instanceToken, open, start }) {
   const sessoes = [];
   let offset = 0;
 
@@ -74,8 +58,7 @@ async function buscarSessoesPorStatus({ instanceId, instanceToken, open, start, 
       offset,
       limit: PAGE_LIMIT,
       open,
-      start,
-      end,
+      start
     });
     const pagina = extrairSessoes(payload);
 
@@ -105,11 +88,11 @@ export async function getChatproSessoes() {
       throw new Error("CHATPRO_INSTANCE_ID e CHATPRO_INSTANCE_TOKEN são obrigatórios");
     }
 
-    const { start, end } = intervaloHojeSaoPaulo();
-    console.log(`[${dataHora()}][sessoes.js] Iniciando requisição para ${SPARKS_SESSIONS_LIST_URL} (hoje: ${start} até ${end})`);
+    const start = intervaloHojeSaoPaulo();
+    console.log(`[${dataHora()}][sessoes.js] Iniciando requisição para ${SPARKS_SESSIONS_LIST_URL} (Inicio: ${start}`);
 
     const [abertas] = await Promise.all([
-      buscarSessoesPorStatus({ instanceId, instanceToken, open: true, start, end }),
+      buscarSessoesPorStatus({ instanceId, instanceToken, open: true, start }),
     ]);
 
     const sessoesPorId = new Map();

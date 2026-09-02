@@ -3,7 +3,6 @@ import { getEventosChatProOrdenados } from "../database/eventos_chatpro.js";
 import { getTelefonesContatosJetimob, telefoneCadastradoNoJetimob } from "../database/contatos_jetimob.js";
 import { getTelefonesLeads, inserirLeads } from "../database/leads.js";
 
-const JANELA_MENSAGENS_NOME = 3;
 const PREFIXOS_NOME = /^(?:meu nome [ée]|me chamo|eu sou|sou o|sou a)\s+/i;
 const SAUDACOES = new Set([
   "oi", "ola", "oie", "olaa", "ok", "sim", "nao", "bom dia", "boa tarde", "boa noite",
@@ -128,6 +127,28 @@ function indiceDaAncora(mensagens, ancora) {
   ));
 }
 
+function ehMensagemRecebida(evento) {
+  return evento?.tipo_evento === "received_message" || evento?.tipo_evento === "receveid_message";
+}
+
+function encontrarPrimeiraRespostaAposAncora(mensagens, indiceAncora, ancorasNormalizadas) {
+  for (let i = indiceAncora + 1; i < mensagens.length; i += 1) {
+    const evento = mensagens[i];
+
+    if (!ehMensagemRecebida(evento)) {
+      continue;
+    }
+
+    if (mensagemCorrespondeAncora(evento, ancorasNormalizadas)) {
+      continue;
+    }
+
+    return evento;
+  }
+
+  return null;
+}
+
 export function encontrarNomeLead(mensagens, ancora, ancorasNormalizadas) {
   if (!ancora) {
     return { nome: "", origem: null, mensagem: null };
@@ -138,21 +159,17 @@ export function encontrarNomeLead(mensagens, ancora, ancorasNormalizadas) {
     return { nome: "", origem: null, mensagem: null };
   }
 
-  const fim = Math.min(mensagens.length, indice + 1 + JANELA_MENSAGENS_NOME);
-
-  for (let i = indice + 1; i < fim; i += 1) {
-    const evento = mensagens[i];
-    if (mensagemCorrespondeAncora(evento, ancorasNormalizadas)) {
-      continue;
-    }
-
-    const nome = extrairNomeDoTexto(evento.mensagem);
-    if (nome) {
-      return { nome, origem: "depois", mensagem: evento };
-    }
+  const mensagemRecebida = encontrarPrimeiraRespostaAposAncora(mensagens, indice, ancorasNormalizadas);
+  if (!mensagemRecebida) {
+    return { nome: "", origem: null, mensagem: null };
   }
 
-  return { nome: "", origem: null, mensagem: null };
+  const nome = extrairNomeDoTexto(mensagemRecebida.mensagem);
+  if (nome) {
+    return { nome, origem: "depois", mensagem: mensagemRecebida };
+  }
+
+  return { nome: "", origem: "depois", mensagem: mensagemRecebida };
 }
 
 export async function identificarMensagemNomePorConversa() {
@@ -178,17 +195,8 @@ export async function identificarMensagemNomePorConversa() {
     }
 
     const ancoras = encontrarMensagensAncora(mensagens, ancorasNormalizadas);
-    let ancora = ancoras[0] ?? null;
-    let lead = { nome: "", origem: null, mensagem: null };
-
-    for (const candidata of ancoras) {
-      const encontrado = encontrarNomeLead(mensagens, candidata, ancorasNormalizadas);
-      if (encontrado.nome) {
-        ancora = candidata;
-        lead = encontrado;
-        break;
-      }
-    }
+    const ancora = ancoras.at(-1) ?? null;
+    const lead = encontrarNomeLead(mensagens, ancora, ancorasNormalizadas);
     const primeira = mensagens[0];
 
     resultados.push({
