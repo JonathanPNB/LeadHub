@@ -91,7 +91,7 @@ export async function preencherLeadIntegrado(num_telefone) {
     const dataSupaBase = `${ano}-${mes}-${dia-5} ${hora}:${minuto}:${segundo}.${milisegundo}000+00`;
     const { data, error } = await supabase
       .from("Leads")
-      .update({ "integrado_at": dataSupaBase })
+      .update({ "integrado_at": "now()" })
       .eq('num_telefone', num_telefone);
 
     if (error) {

@@ -70,6 +70,7 @@ async function cadastrarJetimobContatos(registros) {
 app.get('/leads', async (req, res) => {
   try {
     // Retorno de sucesso
+    syncChatproEventos()
     res.json({ sucesso: true });
 
   } catch (err) {
@@ -100,98 +101,98 @@ fetch('http://localhost:3333/chatpro/eventos', {
 */
 
 // Rota GET com Try/Catch
-app.post("/chatpro/eventos", async (req, res) => {
-  try {
-    //ENVIO DE WEBHOOK PARA TESTES
-    fetch(process.env.WEBHOOK_EVENTOS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": req.get("content-type") || "application/json",
-      },
-      body: req.rawBody ?? JSON.stringify(req.body),
-    }).catch((webhookErr) => {
-      console.error(`[${dataHora()}][server.js] Erro ao enviar webhook chatpro/eventos:`, webhookErr);
-    });
+// app.post("/chatpro/eventos", async (req, res) => {
+//   try {
+//     //ENVIO DE WEBHOOK PARA TESTES
+//     fetch(process.env.WEBHOOK_EVENTOS_URL, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": req.get("content-type") || "application/json",
+//       },
+//       body: req.rawBody ?? JSON.stringify(req.body),
+//     }).catch((webhookErr) => {
+//       console.error(`[${dataHora()}][server.js] Erro ao enviar webhook chatpro/eventos:`, webhookErr);
+//     });
 
-    console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.event} - ${req.body.action} sessionId: ${req.body.new.session_id}`);
+//     console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.event} - ${req.body.action} sessionId: ${req.body.new.session_id}`);
 
-    if(req.body.new.number) {
-      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.number.substring(0, req.body.new.number.indexOf('@'))} - ${req.body.new.message}`);
-    } else {
-      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
-    }
+//     if(req.body.new.number) {
+//       console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.number.substring(0, req.body.new.number.indexOf('@'))} - ${req.body.new.message}`);
+//     } else {
+//       console.log(`[${dataHora()}][server.js] chatpro/eventos: ${JSON.stringify(req.body, null, 2)}`);
+//     }
 
-    if (req.body.new.last_message && req.body.new.last_type) {
-      console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.last_message} - ${req.body.new.last_type}`)
-    }
-    const tipo = req.body.new.type || req.body.new.Type;
-    if (tipo) {
-      console.log(`[server.js] ${tipo} recebido`);
-      const registros = [];
-      let telefone = "";
-      let mensagem = "";
-      let pushname = "";
-      let timestamp = 0;
-      const regex_telefone = /^([1-9]{2})(([1-9]{2}))(\d{4,5})(\d{4})$/;
-      let sessionid = "";
+//     if (req.body.new.last_message && req.body.new.last_type) {
+//       console.log(`[${dataHora()}][server.js] chatpro/eventos: ${req.body.new.last_message} - ${req.body.new.last_type}`)
+//     }
+//     const tipo = req.body.new.type || req.body.new.Type;
+//     if (tipo) {
+//       console.log(`[server.js] ${tipo} recebido`);
+//       const registros = [];
+//       let telefone = "";
+//       let mensagem = "";
+//       let pushname = "";
+//       let timestamp = 0;
+//       const regex_telefone = /^([1-9]{2})(([1-9]{2}))(\d{4,5})(\d{4})$/;
+//       let sessionid = "";
 
-      switch (tipo) {
-        case "send_text_message":
-        case "received_message":
-        case "receveid_message":
-        case "sent_message":
-        case "send_message":
+//       switch (tipo) {
+//         case "send_text_message":
+//         case "received_message":
+//         case "receveid_message":
+//         case "sent_message":
+//         case "send_message":
 
-          telefone = req.body.new.number.substring(0, req.body.new.number.indexOf('@'));
-          mensagem = req.body.new.message;
-          sessionid = req.body.new.session_id;
-          timestamp = req.body.timestamp;
-          break;
-        default:
-          console.log(`[server.js] ${tipo} recebido e não tratado`);
-          break;
-      }
+//           telefone = req.body.new.number.substring(0, req.body.new.number.indexOf('@'));
+//           mensagem = req.body.new.message;
+//           sessionid = req.body.new.session_id;
+//           timestamp = req.body.timestamp;
+//           break;
+//         default:
+//           console.log(`[server.js] ${tipo} recebido e não tratado`);
+//           break;
+//       }
 
-      //verifica se a variavel possui um valor valido
-      if (telefone.trim() && mensagem.trim() && regex_telefone.test(telefone)) {
-        const telefonesJetimob = await getTelefonesContatosJetimob();
+//       //verifica se a variavel possui um valor valido
+//       if (telefone.trim() && mensagem.trim() && regex_telefone.test(telefone)) {
+//         const telefonesJetimob = await getTelefonesContatosJetimob();
 
-        if (telefoneCadastradoNoJetimob(telefone, telefonesJetimob)) {
-          console.log(`[${dataHora()}][server.js] chatpro/eventos: telefone ${telefone} já cadastrado no Jetimob, evento não gravado`);
-        } else {
-          registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp, session_id: sessionid });
+//         if (telefoneCadastradoNoJetimob(telefone, telefonesJetimob)) {
+//           console.log(`[${dataHora()}][server.js] chatpro/eventos: telefone ${telefone} já cadastrado no Jetimob, evento não gravado`);
+//         } else {
+//           registros.push({ tipo_evento: tipo, num_telefone: telefone, mensagem: mensagem, PushName: pushname, messageTimestamp: timestamp, session_id: sessionid });
 
-          // Requisição ao Supabase
-          const { data, error } = await supabase
-            .from("Eventos_chatPro")
-            .insert(registros);
+//           // Requisição ao Supabase
+//           const { data, error } = await supabase
+//             .from("Eventos_chatPro")
+//             .insert(registros);
 
-          // // Verifica se o Supabase retornou um erro de banco/regra
-          if (error) {
-            console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
-            console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
-            return res.status(400).json({
-              sucesso: false,
-              error: error.message,
-              details: error.details
-            });
-          }
-        }
-      }
+//           // // Verifica se o Supabase retornou um erro de banco/regra
+//           if (error) {
+//             console.error(`[${dataHora()}][server.js] error.message: ${error.message}`);
+//             console.error(`[${dataHora()}][server.js] error.details: ${error.details}`);
+//             return res.status(400).json({
+//               sucesso: false,
+//               error: error.message,
+//               details: error.details
+//             });
+//           }
+//         }
+//       }
 
-    }
-    // Retorno de sucesso
-    res.json({ sucesso: true });
+//     }
+//     // Retorno de sucesso
+//     res.json({ sucesso: true });
 
-  } catch (err) {
-    // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
-    console.error(`[${dataHora()}] Erro interno no servidor: ${err}`);
-    res.status(400).json({
-      sucesso: false,
-      erro: "Requisição inválida"
-    });
-  }
-});
+//   } catch (err) {
+//     // Captura erros críticos (ex: rede, crash do servidor, variáveis nulas)
+//     console.error(`[${dataHora()}] Erro interno no servidor: ${err}`);
+//     res.status(400).json({
+//       sucesso: false,
+//       erro: "Requisição inválida"
+//     });
+//   }
+// });
 
 let syncChatproEmAndamento = false;
 
