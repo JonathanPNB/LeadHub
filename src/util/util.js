@@ -16,8 +16,7 @@ export function normalizarTexto(texto) {
 }
 
 export function obterMensagensNomeNormalizadas() {
-    // const mensagemNome = `${process.env.FRASE_01}|${process.env.FRASE_02}|${process.env.FRASE_03}|${process.env.FRASE_04}|${process.env.FRASE_05}|${process.env.FRASE_06}`;
-    const mensagemNome = `${process.env.FRASE_01}|${process.env.FRASE_02}|${process.env.FRASE_03}`;
+    const mensagemNome = `${process.env.FRASE_01}|${process.env.FRASE_02}|${process.env.FRASE_03}|${process.env.FRASE_04}|${process.env.FRASE_05}`;
 
     if (!mensagemNome?.trim()) {
         throw new Error("FRASE_01 é obrigatória no .env");
