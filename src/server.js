@@ -80,3 +80,27 @@ export async function executarSyncChatproEventos() {
     syncChatproEmAndamento = false;
   }
 }
+
+app.post("/sync/chatpro-eventos", (req, res) => {
+  if (syncChatproEmAndamento) {
+    return res.status(409).json({
+      ok: false,
+      message: "Sincronização ChatPro já em andamento",
+    });
+  }
+
+  executarSyncChatproEventos().catch((error) => {
+    console.error(`[${dataHora()}][server.js] Falha ao iniciar sincronização ChatPro: ${error.message}`);
+  });
+
+  return res.status(202).json({
+    ok: true,
+    message: "Sincronização ChatPro iniciada",
+  });
+});
+
+const porta = Number(process.env.PORT) || 3000;
+
+app.listen(porta, () => {
+  console.log(`[${dataHora()}][server.js] Servidor Express ouvindo na porta ${porta}`);
+});
