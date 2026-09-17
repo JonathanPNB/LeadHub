@@ -8,6 +8,8 @@ export function normalizarTexto(texto) {
     return String(texto ?? "")
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\\n/g, " ")
+        .replace(/[\r\n]+/g, " ")
         .replace(/[\p{Extended_Pictographic}\p{Emoji_Presentation}]/gu, " ")
         .replace(/[^a-zA-Z0-9\s]/g, " ")
         .toLowerCase()
