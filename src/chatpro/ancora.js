@@ -131,10 +131,17 @@ function ehMensagemRecebida(evento) {
   return evento?.tipo_evento === "received_message" || evento?.tipo_evento === "receveid_message";
 }
 
-function encontrarPrimeiraRespostaAposAncora(mensagens, indiceAncora, ancorasNormalizadas) {
-  for (let i = indiceAncora + 1; i < mensagens.length; i += 1) {
-    const evento = mensagens[i];
+function candidatosNaJanelaDaAncora(mensagens, indiceAncora, ancorasNormalizadas, raio = 3) {
+  const candidatos = [];
+  const inicio = Math.max(0, indiceAncora - raio);
+  const fim = Math.min(mensagens.length - 1, indiceAncora + raio);
 
+  for (let i = inicio; i <= fim; i += 1) {
+    if (i === indiceAncora) {
+      continue;
+    }
+
+    const evento = mensagens[i];
     if (!ehMensagemRecebida(evento)) {
       continue;
     }
@@ -143,10 +150,13 @@ function encontrarPrimeiraRespostaAposAncora(mensagens, indiceAncora, ancorasNor
       continue;
     }
 
-    return evento;
+    candidatos.push({
+      evento,
+      origem: i < indiceAncora ? "antes" : "depois",
+    });
   }
 
-  return null;
+  return candidatos;
 }
 
 export function encontrarNomeLead(mensagens, ancora, ancorasNormalizadas) {
@@ -159,17 +169,24 @@ export function encontrarNomeLead(mensagens, ancora, ancorasNormalizadas) {
     return { nome: "", origem: null, mensagem: null };
   }
 
-  const mensagemRecebida = encontrarPrimeiraRespostaAposAncora(mensagens, indice, ancorasNormalizadas);
-  if (!mensagemRecebida) {
+  const candidatos = candidatosNaJanelaDaAncora(mensagens, indice, ancorasNormalizadas, 3);
+  if (candidatos.length === 0) {
     return { nome: "", origem: null, mensagem: null };
   }
 
-  const nome = extrairNomeDoTexto(mensagemRecebida.mensagem);
-  if (nome) {
-    return { nome, origem: "depois", mensagem: mensagemRecebida };
+  const depois = candidatos.filter((candidato) => candidato.origem === "depois");
+  const antes = candidatos.filter((candidato) => candidato.origem === "antes").reverse();
+  const ordem = [...depois, ...antes];
+
+  for (const candidato of ordem) {
+    const nome = extrairNomeDoTexto(candidato.evento.mensagem);
+    if (nome) {
+      return { nome, origem: candidato.origem, mensagem: candidato.evento };
+    }
   }
 
-  return { nome: "", origem: "depois", mensagem: mensagemRecebida };
+  const fallback = ordem[0];
+  return { nome: "", origem: fallback.origem, mensagem: fallback.evento };
 }
 
 export async function identificarMensagemNomePorConversa() {
