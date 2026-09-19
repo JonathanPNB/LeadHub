@@ -5,7 +5,7 @@ import { getTelefonesLeads, inserirLeads } from "../database/leads.js";
 
 const PREFIXOS_NOME = /^(?:meu nome [ée]|me chamo|eu sou|sou o|sou a)\s+/i;
 const SAUDACOES = new Set([
-  "oi", "ola", "oie", "olaa", "ok", "sim", "nao", "bom dia", "boa tarde", "boa noite",
+  "oi", "oii", "oiii", "ola", "oie", "olaa", "ok", "sim", "nao", "bom dia", "boa tarde", "boa noite",
   "obrigado", "obrigada", "valeu", "blz", "beleza", "casa", "prédio", "Prédio", "Financeiro*",
   "Casa",
 ]);
