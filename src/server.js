@@ -3,12 +3,10 @@ import "dotenv/config";
 import express from "express";
 import cron from "node-cron";
 import { supabase } from "./database/supabase.js";
-import { getJetimobLeads } from "./jetimob/leads.js";
+import { getJetimobLeads, inserirLeadsJetiMob } from "./jetimob/leads.js";
 import { dataHora } from "./util/util.js";
-import { getChatproContatos } from "./chatpro/contatos.js";
-import { getSupaBase_ContatosJetiMob, getTelefonesContatosJetimob, telefoneCadastradoNoJetimob } from "./database/contatos_jetimob.js";
+import { getSupaBase_ContatosJetiMob } from "./database/contatos_jetimob.js";
 import { syncChatproEventos } from "./chatpro/sync.js";
-import { inserirLeadsJetiMob } from "./jetimob/leads.js"
 
 const app = express();
 
@@ -63,7 +61,7 @@ async function cadastrarJetimobContatos(registros) {
 
 let syncChatproEmAndamento = false;
 
-export async function executarSyncChatproEventos() {
+async function executarSyncChatproEventos() {
   if (syncChatproEmAndamento) {
     console.log(`[${dataHora()}][server.js] Sincronização ChatPro já em andamento, execução ignorada`);
     return;
@@ -103,4 +101,15 @@ const porta = Number(process.env.PORT) || 3000;
 
 app.listen(porta, () => {
   console.log(`[${dataHora()}][server.js] Servidor Express ouvindo na porta ${porta}`);
+
+  cron.schedule("*/30 * * * *", () => {
+    console.log(`[${dataHora()}][server.js] Cron ChatPro: iniciando sincronização`);
+    executarSyncChatproEventos().catch((error) => {
+      console.error(`[${dataHora()}][server.js] Falha no cron ChatPro: ${error.message}`);
+    });
+  }, {
+    timezone: "America/Sao_Paulo",
+  });
+
+  console.log(`[${dataHora()}][server.js] Cron ChatPro agendado a cada 30 minutos`);
 });

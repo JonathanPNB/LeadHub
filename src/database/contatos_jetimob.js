@@ -1,4 +1,3 @@
-import { dataHora } from "../util/util.js";
 import { supabase } from "../database/supabase.js";
 
 export function normalizarTelefone(telefone) {

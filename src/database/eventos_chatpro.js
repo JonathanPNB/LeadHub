@@ -34,7 +34,7 @@ export async function getEventosChatProOrdenados() {
   return eventos;
 }
 
-export function chaveEventoChatPro(registro) {
+function chaveEventoChatPro(registro) {
   if (registro?.message_id) {
     return `id:${registro.message_id}`;
   }

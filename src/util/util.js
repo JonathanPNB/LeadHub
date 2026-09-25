@@ -36,7 +36,7 @@ export function obterMensagensNomeNormalizadas() {
     return frases;
 }
 
-export function aguardar(ms) {
+function aguardar(ms) {
     return new Promise((resolve) => setTimeout(resolve, parseInt(ms.replace(/_/g, ''), 10)));
 }
 

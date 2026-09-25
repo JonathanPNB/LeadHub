@@ -20,8 +20,8 @@ function intervaloHojeSaoPaulo() {
   return new Date(`2026-09-08T00:00:00.000Z`).toISOString()
 }
 
-async function buscarPaginaSessoes({ instanceId, instanceToken, offset, limit, open, start, end }) {
-  const body = { instanceId, limit, offset, start, end };
+async function buscarPaginaSessoes({ instanceId, instanceToken, offset, limit, open, start }) {
+  const body = { instanceId, limit, offset, start };
 
   if (typeof open === "boolean") {
     body.open = open;
@@ -91,12 +91,10 @@ export async function getChatproSessoes() {
     const start = intervaloHojeSaoPaulo();
     console.log(`[${dataHora()}][sessoes.js] Iniciando requisição para ${SPARKS_SESSIONS_LIST_URL} (Inicio: ${start}`);
 
-    const [abertas] = await Promise.all([
-      buscarSessoesPorStatus({ instanceId, instanceToken, open: true, start }),
-    ]);
+    const abertas = await buscarSessoesPorStatus({ instanceId, instanceToken, open: true, start });
 
     const sessoesPorId = new Map();
-    for (const sessao of [...abertas]) {
+    for (const sessao of abertas) {
       sessoesPorId.set(chaveSessao(sessao), sessao);
     }
 

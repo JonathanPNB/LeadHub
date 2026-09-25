@@ -84,7 +84,7 @@ function mensagemCorrespondeFrase(evento, ancoraNormalizada) {
   return false;
 }
 
-export function mensagemCorrespondeAncora(evento, ancorasNormalizadas) {
+function mensagemCorrespondeAncora(evento, ancorasNormalizadas) {
   return frasesAncora(ancorasNormalizadas).some((frase) => mensagemCorrespondeFrase(evento, frase));
 }
 
@@ -107,7 +107,7 @@ function pareceNome(texto) {
   return /[a-z]/.test(normalizado);
 }
 
-export function extrairNomeDoTexto(texto) {
+function extrairNomeDoTexto(texto) {
   const primeiraLinha = String(texto ?? "").split(/\r?\n/)[0].trim();
 
   if (!primeiraLinha) {
@@ -159,7 +159,7 @@ function candidatosNaJanelaDaAncora(mensagens, indiceAncora, ancorasNormalizadas
   return candidatos;
 }
 
-export function encontrarNomeLead(mensagens, ancora, ancorasNormalizadas) {
+function encontrarNomeLead(mensagens, ancora, ancorasNormalizadas) {
   if (!ancora) {
     return { nome: "", origem: null, mensagem: null };
   }
@@ -239,8 +239,6 @@ export async function identificarMensagemNomePorConversa() {
       }
     } else if (ancora) {
       console.log(`[${dataHora()}][ancora.js] Conversa ${chave}: âncora encontrada, nome do lead não identificado`);
-    } else {
-      // console.log(`[${dataHora()}][ancora.js] Conversa ${chave}: MENSAGEM_NOME não encontrada`);
     }
   }
 

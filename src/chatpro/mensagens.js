@@ -42,7 +42,7 @@ function compararTsReceive(a, b) {
   return Number(tsA) - Number(tsB);
 }
 
-export function ordenarMensagensPorTsReceive(mensagens) {
+function ordenarMensagensPorTsReceive(mensagens) {
   return [...mensagens].sort(compararTsReceive);
 }
 
@@ -133,7 +133,7 @@ async function buscarPaginaMensagens({ instanceId, instanceToken, sessionId, off
 }
 
 // Busca todas as mensagens de uma sessão no Sparks ChatPro
-export async function getChatproMensagensPorSessao(sessionId) {
+async function getChatproMensagensPorSessao(sessionId) {
   const instanceId = process.env.CHATPRO_INSTANCE_ID;
   const instanceToken = process.env.CHATPRO_INSTANCE_TOKEN;
 
@@ -178,7 +178,6 @@ export async function getChatproMensagensPorSessao(sessionId) {
 export async function getChatproMensagensPorSessoes(sessoes) {
   const resultados = [];
   const telefonesJetimob = await getTelefonesContatosJetimob();
-  // console.log(`[${dataHora()}][mensagens.js] ${telefonesJetimob.size} telefone(s) cadastrado(s) em Contatos_JetiMob`);
 
   for (const sessao of sessoes) {
     const sessionId = obterSessionId(sessao);
@@ -194,10 +193,8 @@ export async function getChatproMensagensPorSessoes(sessoes) {
       continue;
     }
 
-    // console.log(`[${dataHora()}][mensagens.js] Buscando mensagens da sessão ${sessionId}...`);
     const mensagens = await getChatproMensagensPorSessao(sessionId);
     const mensagensOrdenadas = ordenarMensagensPorTsReceive(mensagens);
-    // console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: ${mensagensOrdenadas.length} mensagem(ns)`);
 
     const registros = mensagensParaRegistros(mensagensOrdenadas, sessionId);
     const telefoneConversa = obterTelefoneConversa(sessao, registros);
@@ -208,17 +205,13 @@ export async function getChatproMensagensPorSessoes(sessoes) {
       continue;
     }
 
-    if (registros.length === 0) {
-      // console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: nenhum registro válido para inserir`);
-    } else {
+    if (registros.length > 0) {
       const eventosExistentes = await getEventosChatProPorSessao(sessionId);
       const registrosNovos = filtrarEventosNovos(registros, eventosExistentes);
 
       if (registrosNovos.length > 0) {
         console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: ${registrosNovos.length} novo(s) / ${registros.length - registrosNovos.length} duplicado(s)`);
         await inserirEventosChatPro(registrosNovos);
-      } else {
-        // console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: nenhum registro novo para inserir (${registros.length} duplicado(s))`);
       }
     }
 
