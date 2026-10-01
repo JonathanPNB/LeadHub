@@ -66,7 +66,7 @@ async function executarSyncChatproEventos() {
     console.log(`[${dataHora()}][server.js] Sincronização ChatPro já em andamento, execução ignorada`);
     return;
   }
-
+  
   syncChatproEmAndamento = true;
   try {
     await syncJetimobLeads();
@@ -91,7 +91,7 @@ app.post("/sync/chatpro-eventos", (req, res) => {
     console.error(`[${dataHora()}][server.js] Falha ao iniciar sincronização ChatPro: ${error.message}`);
   });
 
-  return res.status(202).json({
+  return res.status(200).json({
     ok: true,
     message: "Sincronização ChatPro iniciada",
   });
