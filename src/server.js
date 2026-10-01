@@ -101,15 +101,4 @@ const porta = Number(process.env.PORT) || 3000;
 
 app.listen(porta, () => {
   console.log(`[${dataHora()}][server.js] Servidor Express ouvindo na porta ${porta}`);
-
-  cron.schedule("*/30 * * * *", () => {
-    console.log(`[${dataHora()}][server.js] Cron ChatPro: iniciando sincronização`);
-    executarSyncChatproEventos().catch((error) => {
-      console.error(`[${dataHora()}][server.js] Falha no cron ChatPro: ${error.message}`);
-    });
-  }, {
-    timezone: "America/Sao_Paulo",
-  });
-
-  console.log(`[${dataHora()}][server.js] Cron ChatPro agendado a cada 30 minutos`);
 });
