@@ -189,7 +189,6 @@ export async function getChatproMensagensPorSessoes(sessoes) {
 
     const telefoneSessao = obterTelefoneSessao(sessao);
     if (telefoneSessao && telefoneCadastradoNoJetimob(telefoneSessao, telefonesJetimob)) {
-      // console.warn(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneSessao} já cadastrado no Jetimob, conversa ignorada`);
       continue;
     }
 
@@ -200,7 +199,6 @@ export async function getChatproMensagensPorSessoes(sessoes) {
     const telefoneConversa = obterTelefoneConversa(sessao, registros);
 
     if (telefoneConversa && telefoneCadastradoNoJetimob(telefoneConversa, telefonesJetimob)) {
-      // console.warn(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: telefone ${telefoneConversa} já cadastrado no Jetimob, conversa não gravada`);
       resultados.push({ sessionId, sessao, mensagens: mensagensOrdenadas });
       continue;
     }
@@ -210,7 +208,6 @@ export async function getChatproMensagensPorSessoes(sessoes) {
       const registrosNovos = filtrarEventosNovos(registros, eventosExistentes);
 
       if (registrosNovos.length > 0) {
-        console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: ${registrosNovos.length} novo(s) / ${registros.length - registrosNovos.length} duplicado(s)`);
         await inserirEventosChatPro(registrosNovos);
       }
     }
