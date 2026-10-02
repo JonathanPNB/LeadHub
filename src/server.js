@@ -81,7 +81,7 @@ async function executarSyncChatproEventos() {
 
 app.post("/sync/chatpro-eventos", (req, res) => {
   if (syncChatproEmAndamento) {
-    return res.status(409).json({
+    return res.status(200).json({
       ok: false,
       message: "Sincronização ChatPro já em andamento",
     });
