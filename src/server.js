@@ -66,7 +66,8 @@ async function executarSyncChatproEventos() {
     console.log(`[${dataHora()}][server.js] Sincronização ChatPro já em andamento, execução ignorada`);
     return;
   }
-  
+
+  const inicio = Date.now();
   syncChatproEmAndamento = true;
   try {
     await syncJetimobLeads();
@@ -76,6 +77,8 @@ async function executarSyncChatproEventos() {
     console.error(`[${dataHora()}][server.js] Falha na sincronização ChatPro: ${error.message}`);
   } finally {
     syncChatproEmAndamento = false;
+    const duracaoSegundos = ((Date.now() - inicio) / 1000).toFixed(1);
+    console.log(`[${dataHora()}][server.js] Tempo total de processamento: ${duracaoSegundos}s`);
   }
 }
 
