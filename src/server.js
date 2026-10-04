@@ -82,7 +82,7 @@ async function executarSyncChatproEventos() {
   }
 }
 
-app.post("/sync/chatpro-eventos", (req, res) => {
+app.get("/sync/chatpro-eventos", (req, res) => {
   if (syncChatproEmAndamento) {
     return res.status(200).json({
       ok: false,

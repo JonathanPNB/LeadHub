@@ -17,7 +17,11 @@ function chaveSessao(sessao) {
 }
 
 function intervaloHojeSaoPaulo() {
-  return new Date(`2026-09-08T00:00:00.000Z`).toISOString()
+  const data = new Date()
+  data.setUTCHours(0, 0, 0, 0)
+  data.setUTCDate(data.getUTCDate() - 5)
+
+  return data.toISOString()
 }
 
 async function buscarPaginaSessoes({ instanceId, instanceToken, offset, limit, open, start }) {
