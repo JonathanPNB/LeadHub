@@ -4,6 +4,7 @@ import { getTelefonesContatosJetimob, telefoneCadastradoNoJetimob } from "../dat
 
 const SPARKS_MESSAGES_GET_ALL_URL = "https://sparks.chatpro.com.br/messages/getAll";
 const PAGE_LIMIT = 100;
+const MAX_DIAS_INATIVIDADE = 7;
 const REGEX_TELEFONE = /^([1-9]{2})(([1-9]{2}))(\d{4,5})(\d{4})$/;
 
 function extrairMensagens(payload) {
@@ -44,6 +45,35 @@ function compararTsReceive(a, b) {
 
 function ordenarMensagensPorTsReceive(mensagens) {
   return [...mensagens].sort(compararTsReceive);
+}
+
+function timestampParaMs(valor) {
+  if (valor == null || valor === "") {
+    return null;
+  }
+
+  if (typeof valor === "number" || /^\d+$/.test(String(valor))) {
+    const numero = Number(valor);
+    return numero < 1e12 ? numero * 1000 : numero;
+  }
+
+  const parsed = new Date(valor).getTime();
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function conversaInativaHaMaisDeDias(mensagens, dias) {
+  if (!mensagens.length) {
+    return true;
+  }
+
+  const ultima = mensagens[mensagens.length - 1];
+  const ts = timestampParaMs(obterTsReceive(ultima) ?? ultima?.timestamp);
+
+  if (ts == null) {
+    return false;
+  }
+
+  return ts < Date.now() - dias * 24 * 60 * 60 * 1000;
 }
 
 function obterTelefoneSessao(sessao) {
@@ -198,6 +228,11 @@ export async function getChatproMensagensPorSessoes(sessoes) {
 
     const mensagens = await getChatproMensagensPorSessao(sessionId);
     const mensagensOrdenadas = ordenarMensagensPorTsReceive(mensagens);
+
+    if (conversaInativaHaMaisDeDias(mensagensOrdenadas, MAX_DIAS_INATIVIDADE)) {
+      console.log(`[${dataHora()}][mensagens.js] Sessão ${sessionId}: última mensagem há mais de ${MAX_DIAS_INATIVIDADE} dias, conversa ignorada`);
+      continue;
+    }
 
     const registros = mensagensParaRegistros(mensagensOrdenadas, sessionId);
     const telefoneConversa = obterTelefoneConversa(sessao, registros);
