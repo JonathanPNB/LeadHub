@@ -257,8 +257,8 @@ export async function getChatproMensagensPorSessoes(sessoes) {
 
   const totalMensagens = resultados.reduce((total, item) => total + item.mensagens.length, 0);
   console.log(`[${dataHora()}][mensagens.js] ${totalMensagens} mensagem(ns) em ${resultados.length} sessão(ões)`);
-  const duracaoSegundos = ((Date.now() - inicio) / 1000).toFixed(1);
-  console.log(`[${dataHora()}][mensagens.js] Tempo total de processamento: ${duracaoSegundos}s`);
+  // const duracaoSegundos = ((Date.now() - inicio) / 1000).toFixed(1);
+  // console.log(`[${dataHora()}][mensagens.js] Tempo total de processamento: ${duracaoSegundos}s`);
 
   return resultados;
 }
